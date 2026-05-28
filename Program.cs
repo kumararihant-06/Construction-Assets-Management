@@ -20,7 +20,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapEquipmentEndpoints();
-//app.MapJobSiteEndpoints();
+app.MapJobSiteEndpoints();
 //app.MapAssignmentEndpoints();
 
 app.MapGet("/", () => new [] {"hello"});
