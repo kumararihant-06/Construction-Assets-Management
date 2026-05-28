@@ -21,7 +21,7 @@ app.UseHttpsRedirection();
 
 app.MapEquipmentEndpoints();
 app.MapJobSiteEndpoints();
-//app.MapAssignmentEndpoints();
+app.MapAssignmentEndpoints();
 
 app.MapGet("/", () => new [] {"hello"});
 
