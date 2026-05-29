@@ -2,10 +2,16 @@ using ConstructionAssetAPI.Data;
 using ConstructionAssetAPI.Endpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder  =  WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidProgramException("Connection string 'DefaultConnection' not found.");
 

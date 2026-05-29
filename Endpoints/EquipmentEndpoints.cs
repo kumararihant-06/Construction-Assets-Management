@@ -21,7 +21,7 @@ public static class EquipmentEndpoints
 {
     public static void MapEquipmentEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/equipment").WithTags("Equipment");
+        var group = app.MapGroup("/equipments").WithTags("Equipment");
 
         //GET /equipment 
         group.MapGet("/", async(AppDbContext db) => await db.Equipment.ToListAsync());
@@ -83,5 +83,12 @@ public static class EquipmentEndpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         });
-    }
+
+        // GET /equipment/available — only currently-available equipment.
+        // Operationally: "what can I assign to a site right now?"
+        group.MapGet("/available", async (AppDbContext db) =>
+            await db.Equipment
+                .Where(e => e.Status == "Available")
+                .ToListAsync());
+    }       
 }
