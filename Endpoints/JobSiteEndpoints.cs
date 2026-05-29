@@ -17,7 +17,7 @@ public static class JobSiteEndpoints
 {
     public static void MapJobSiteEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/jobsites").WithTags("JobSites");
+        var group = app.MapGroup("/api/v1/jobsites").WithTags("JobSites").RequireAuthorization("RequireAnyAuthenticatedUser");
 
         group.MapGet("/", async (AppDbContext db) => await db.JobSites.ToListAsync());
 
@@ -38,8 +38,8 @@ public static class JobSiteEndpoints
             db.JobSites.Add(site);
             await db.SaveChangesAsync();
 
-            return Results.Created($"/jobsites/{site.Id}",site);
-        });
+            return Results.Created($"/api/v1/jobsites/{site.Id}",site);
+        }).RequireAuthorization("RequireManagerOrAbove");
 
         group.MapPut("/{id:int}", async (int id, JobSiteInput input, AppDbContext db) =>
         {
@@ -53,7 +53,7 @@ public static class JobSiteEndpoints
 
             await db.SaveChangesAsync();
             return Results.NoContent();
-        });
+        }).RequireAuthorization("RequireManagerOrAbove");
 
         group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
         {
@@ -63,6 +63,6 @@ public static class JobSiteEndpoints
             db.JobSites.Remove(site);
             await db.SaveChangesAsync();
             return Results.NoContent();
-        });
+        }).RequireAuthorization("RequireAdmin");
     }
 }

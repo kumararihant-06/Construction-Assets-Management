@@ -18,11 +18,13 @@ public record EquipmentInput
     DateTime? NextMaintenanceDate
 );
 
+public record UpdateStatusInput(EquipmentStatus Status);
+
 public static class EquipmentEndpoints
 {
     public static void MapEquipmentEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/equipments").WithTags("Equipment");
+        var group = app.MapGroup("/api/v1/equipments").WithTags("Equipment").RequireAuthorization("RequireAnyAuthenticatedUser");
 
         //GET /equipment 
         group.MapGet("/", async(AppDbContext db) => await db.Equipment.ToListAsync());
@@ -51,8 +53,8 @@ public static class EquipmentEndpoints
             db.Equipment.Add(equipment);
             await db.SaveChangesAsync();
 
-            return Results.Created($"/equipment/{equipment.Id}", equipment);
-        });
+            return Results.Created($"/api/v1/equipments/{equipment.Id}", equipment);
+        }).RequireAuthorization("RequireManagerOrAbove");
 
         //PUT /equipment/{id}
         group.MapPut("/{id:int}", async (int id, EquipmentInput input, IValidator<EquipmentInput> validator, AppDbContext db) =>
@@ -72,7 +74,7 @@ public static class EquipmentEndpoints
 
             await db.SaveChangesAsync();
             return Results.NoContent();
-        });
+        }).RequireAuthorization("RequireManagerOrAbove");
 
         // DELETE /equipment/{id}
         group.MapDelete("{id:int}", async (int id, AppDbContext db) =>
@@ -83,7 +85,7 @@ public static class EquipmentEndpoints
             db.Equipment.Remove(equipment);
             await db.SaveChangesAsync();
             return Results.NoContent();
-        });
+        }).RequireAuthorization("RequireAdmin");
 
         // GET /equipment/available — only currently-available equipment.
         // Operationally: "what can I assign to a site right now?"
@@ -91,5 +93,23 @@ public static class EquipmentEndpoints
             await db.Equipment
                 .Where(e => e.Status == EquipmentStatus.Available)
                 .ToListAsync());
+        
+        group.MapGet("/maintenance-due", async (AppDbContext db) =>
+        await db.Equipment
+            .Where(e => e.NextMaintenanceDate <= DateTime.UtcNow.AddDays(7))
+            .ToListAsync())
+        .RequireAuthorization("RequireManagerOrAbove");
+
+        group.MapPatch("/{id:int}/status", async (int id, UpdateStatusInput input, AppDbContext db) =>
+        {
+            var equipment = await db.Equipment.FindAsync(id);
+            if (equipment is null) return Results.NotFound();
+
+            equipment.Status = input.Status;
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        });
+
+
     }       
 }

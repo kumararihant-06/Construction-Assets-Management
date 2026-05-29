@@ -16,7 +16,7 @@ public static class AssignmentEndpoints
 {
     public static void MapAssignmentEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/assignments").WithTags("Assignments");
+        var group = app.MapGroup("/api/v1/assignments").WithTags("Assignments").RequireAuthorization("RequireAnyAuthenticatedUser");
 
         // GET /assignments - lists all assignments with equipments and sites.
         group.MapGet("/", async(AppDbContext db) => 
@@ -100,8 +100,8 @@ public static class AssignmentEndpoints
                 assignment.Notes
             };
 
-            return Results.Created($"/assignments/{assignment.Id}", response);
-        });
+            return Results.Created($"/api/v1/assignments/{assignment.Id}", response);
+        }).RequireAuthorization("RequireManagerOrAbove");
 
         // DELETE /assignments/{id} — soft return:
         // mark ReturnDate = now and flip equipment status back to Available.
@@ -121,6 +121,6 @@ public static class AssignmentEndpoints
 
             await db.SaveChangesAsync();
             return Results.NoContent();
-        });
+        }).RequireAuthorization("RequireManagerOrAbove");
     }
 }
