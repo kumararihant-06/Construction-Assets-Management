@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations;
 using ConstructionAssetAPI.Data;
 using ConstructionAssetAPI.Models;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConstructionAssetAPI.Endpoints;
@@ -30,8 +32,12 @@ public static class EquipmentEndpoints
                 ? Results.Ok(eq) : Results.NotFound());
         
         // POST /equipment
-        group.MapPost("/", async (EquipmentInput input, AppDbContext db) =>
+        group.MapPost("/", async (EquipmentInput input, IValidator<EquipmentInput> validator, AppDbContext db) =>
         {
+            var validation = await validator.ValidateAsync(input);
+            if(!validation.IsValid)
+            return Results.ValidationProblem(validation.ToDictionary());
+
             var equipment = new Equipment
             {
                 Name = input.Name,
@@ -48,8 +54,12 @@ public static class EquipmentEndpoints
         });
 
         //PUT /equipment/{id}
-        group.MapPut("/{id:int}", async (int id, EquipmentInput input, AppDbContext db) =>
+        group.MapPut("/{id:int}", async (int id, EquipmentInput input, IValidator<EquipmentInput> validator, AppDbContext db) =>
         {
+            var validation = await validator.ValidateAsync(input);
+            if(!validation.IsValid)
+                return Results.ValidationProblem(validation.ToDictionary());
+
             var equipment = await db.Equipment.FindAsync(id);
             if(equipment is null) return Results.NotFound();
 

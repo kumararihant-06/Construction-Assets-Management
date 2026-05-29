@@ -1,5 +1,6 @@
 using ConstructionAssetAPI.Data;
 using ConstructionAssetAPI.Endpoints;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 var builder  =  WebApplication.CreateBuilder(args);
@@ -9,6 +10,8 @@ builder.Services.AddOpenApi();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidProgramException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 
