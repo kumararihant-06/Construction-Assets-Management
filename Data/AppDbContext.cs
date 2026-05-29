@@ -1,4 +1,4 @@
-using ConstructionAssetAPI.Models;
+using ConstructionAssetAPI.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConstructionAssetAPI.Data;

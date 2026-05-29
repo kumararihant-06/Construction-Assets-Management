@@ -1,5 +1,5 @@
 using ConstructionAssetAPI.Data;
-using ConstructionAssetAPI.Models;
+using ConstructionAssetAPI.Entities;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
 

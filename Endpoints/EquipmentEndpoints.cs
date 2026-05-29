@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using ConstructionAssetAPI.Data;
-using ConstructionAssetAPI.Models;
+using ConstructionAssetAPI.Entities;
+using ConstructionAssetAPI.Enums;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,7 @@ public record EquipmentInput
     string Name,
     string Type,
     string SerialNumber,
-    string Status,
+    EquipmentStatus Status,
     DateTime? NextMaintenanceDate
 );
 
@@ -88,7 +89,7 @@ public static class EquipmentEndpoints
         // Operationally: "what can I assign to a site right now?"
         group.MapGet("/available", async (AppDbContext db) =>
             await db.Equipment
-                .Where(e => e.Status == "Available")
+                .Where(e => e.Status == EquipmentStatus.Available)
                 .ToListAsync());
     }       
 }

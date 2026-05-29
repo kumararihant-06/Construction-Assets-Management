@@ -1,4 +1,4 @@
-namespace ConstructionAssetAPI.Models;
+namespace ConstructionAssetAPI.Entities;
 
 public class JobSite
 {

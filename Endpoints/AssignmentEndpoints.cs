@@ -1,7 +1,8 @@
 using ConstructionAssetAPI.Data;
-using ConstructionAssetAPI.Models;
+using ConstructionAssetAPI.Entities;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
+using ConstructionAssetAPI.Enums;
 namespace ConstructionAssetAPI.Endpoints;
 public record AssignmentInput
 (
@@ -84,7 +85,7 @@ public static class AssignmentEndpoints
                 Notes = input.Notes
             };
 
-            equipment.Status = "InUse";
+            equipment.Status = EquipmentStatus.InUse;
 
             db.Assignments.Add(assignment);
             await db.SaveChangesAsync();
@@ -116,7 +117,7 @@ public static class AssignmentEndpoints
                 return Results.BadRequest(new { error = "Assignment already returned." });
 
             assignment.ReturnDate = DateTime.UtcNow;
-            assignment.Equipment.Status = "Available";
+            assignment.Equipment.Status = EquipmentStatus.Available;
 
             await db.SaveChangesAsync();
             return Results.NoContent();
