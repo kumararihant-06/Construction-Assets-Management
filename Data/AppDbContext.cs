@@ -1,9 +1,11 @@
 using ConstructionAssetAPI.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace ConstructionAssetAPI.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -13,8 +15,11 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //Enforce SerialNumber uniqueness at the DB level.
-        // EF Core translates this into a UNIQUE INDEX in the SQLite schema.
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<IdentityUserPasskey<Guid>>().HasKey(p => new { p.UserId, p.CredentialId });
+        modelBuilder.Entity<IdentityPasskeyData>().HasKey(p => p.AttestationObject);
+
         modelBuilder.Entity<Equipment>()
             .HasIndex(e => e.SerialNumber)
             .IsUnique();
