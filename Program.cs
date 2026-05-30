@@ -68,7 +68,9 @@ builder.Services.AddAuthorization(options =>
 
 // Services
 builder.Services.AddScoped<AuthService>();
-
+builder.Services.AddScoped<EquipmentService>();
+builder.Services.AddScoped<JobSiteService>();
+builder.Services.AddScoped<AssignmentService>();
 // Validation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 

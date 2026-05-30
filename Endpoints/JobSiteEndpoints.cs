@@ -1,7 +1,5 @@
-using ConstructionAssetAPI.Data;
-using ConstructionAssetAPI.Entities;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.EntityFrameworkCore;
+using ConstructionAssetAPI.Services;
+using FluentValidation;
 
 namespace ConstructionAssetAPI.Endpoints;
 
@@ -17,51 +15,46 @@ public static class JobSiteEndpoints
 {
     public static void MapJobSiteEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/v1/jobsites").WithTags("JobSites").RequireAuthorization("RequireAnyAuthenticatedUser");
+        var group = app.MapGroup("/api/v1/jobsites")
+            .WithTags("JobSites")
+            .RequireAuthorization("RequireAnyAuthenticatedUser");
 
-        group.MapGet("/", async (AppDbContext db) => await db.JobSites.ToListAsync());
+        group.MapGet("/", async (JobSiteService svc) =>
+            Results.Ok(await svc.GetAllAsync()));
 
-        group.MapGet("/{id:int}", async(int id, AppDbContext db) =>
-            await db.JobSites.FindAsync(id) is JobSite site
-                ? Results.Ok(site) : Results.NotFound());
-        
-        group.MapPost("/", async (JobSiteInput input, AppDbContext db) =>
+        group.MapGet("/{id:int}", async (int id, JobSiteService svc) =>
+            Results.Ok(await svc.GetByIdAsync(id)));
+
+        group.MapPost("/", async (
+            JobSiteInput input,
+            IValidator<JobSiteInput> validator,
+            JobSiteService svc) =>
         {
-            var site = new JobSite
-            {
-                Name = input.Name,
-                Location = input.Location,
-                StartDate = input.StartDate,
-                EndDate = input.EndDate
-            };
+            var validation = await validator.ValidateAsync(input);
+            if (!validation.IsValid)
+                return Results.ValidationProblem(validation.ToDictionary());
 
-            db.JobSites.Add(site);
-            await db.SaveChangesAsync();
-
-            return Results.Created($"/api/v1/jobsites/{site.Id}",site);
+            var created = await svc.CreateAsync(input);
+            return Results.Created($"/api/v1/jobsites/{created.Id}", created);
         }).RequireAuthorization("RequireManagerOrAbove");
 
-        group.MapPut("/{id:int}", async (int id, JobSiteInput input, AppDbContext db) =>
+        group.MapPut("/{id:int}", async (
+            int id,
+            JobSiteInput input,
+            IValidator<JobSiteInput> validator,
+            JobSiteService svc) =>
         {
-            var site = await db.JobSites.FindAsync(id);
-            if (site is null) return Results.NotFound();
-            
-            site.Name = input.Name;
-            site.Location = input.Location;
-            site.StartDate = input.StartDate;
-            site.EndDate = input.EndDate;
+            var validation = await validator.ValidateAsync(input);
+            if (!validation.IsValid)
+                return Results.ValidationProblem(validation.ToDictionary());
 
-            await db.SaveChangesAsync();
+            await svc.UpdateAsync(id, input);
             return Results.NoContent();
         }).RequireAuthorization("RequireManagerOrAbove");
 
-        group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
+        group.MapDelete("/{id:int}", async (int id, JobSiteService svc) =>
         {
-            var site = await db.JobSites.FindAsync(id);
-            if(site is null) return Results.NotFound();
-
-            db.JobSites.Remove(site);
-            await db.SaveChangesAsync();
+            await svc.DeleteAsync(id);
             return Results.NoContent();
         }).RequireAuthorization("RequireAdmin");
     }
